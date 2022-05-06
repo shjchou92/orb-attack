@@ -1123,6 +1123,7 @@ addEventListener('resize', () => {
 });
 
 startGame.addEventListener('click', () => {
+    isChallenge = false
     init(isChallenge);
     animate();
     score = 0;
