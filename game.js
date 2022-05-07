@@ -567,6 +567,31 @@ function createScoreLabel(projectile, score) {
     });
 };
 
+function movePlayer() {
+    if (press.right && player.x < canvas.width-15) player.x += 5;
+    if (press.left && player.x > 15) player.x -= 5;
+    if (press.up && player.y > 15) player.y -= 5;
+    if (press.down && player.y < canvas.height-15) player.y += 5;
+};
+
+function gameOver() {
+    gameMenu.style.display = 'flex';
+    startGame.style.display = 'block';
+    startChallenge.style.display = 'block';
+    tutorialBtn.style.display = 'block';
+    pushMovement.disabled = false;
+    bigScore.innerHTML = score;
+    playerScore.classList.remove('hidden');
+    gameTitle.classList.add('hidden');
+
+    gsap.to('#whiteGameMenu', {
+        opacity: 1,
+        scale: 1,
+        duration: 0.45,
+        ease: 'expo.out'
+    });
+}
+
 let animationId;
 let score = 0;
 let frame = 0;
@@ -579,7 +604,7 @@ function animate() {
     frame++;
 
     if (frame % 30 === 0) spawnEnemies(player);
-    if (frame % 4000 === 0) {
+    if (frame % 2000 === 0) {
         powerType = 'bomb';
         spawnPowerUps(powerType);
     } else if (frame % 1000 === 0) {
@@ -592,10 +617,7 @@ function animate() {
 
     if (!pushMovement.checked) {
         player.draw();
-        if (press.right) player.x += 4;
-        if (press.left) player.x -= 4;
-        if (press.up) player.y -= 4;
-        if (press.down) player.y += 4;
+        movePlayer();
     } else {
         player.update();
     };
@@ -627,7 +649,7 @@ function animate() {
         if (frame % 12 === 0) player.tripleShoot(mouse);
     };
 
-    if (player.powerUp === 'explosion') {
+    if (player.powerUp === 'explosion' || explode) {
         if (explode && explode.radius < canvas.width) {
             explode.update();
 
@@ -674,6 +696,7 @@ function animate() {
             });
         } else {
             player.powerUp = null;
+            explode = null;
         };
     };
 
@@ -699,6 +722,7 @@ function animate() {
             } else {
                 explode = new Explosion(player.x, player.y);
                 player.powerUp = 'explosion';
+                player.color = '#fff'
             }
             powerUps.splice(index, 1);
         } else {
@@ -733,22 +757,8 @@ function animate() {
         if (enemyPlayerDist - enemy.radius - player.radius < 1) {
             setTimeout(() => {
                 cancelAnimationFrame(animationId);
-                gameMenu.style.display = 'flex';
-                startGame.style.display = 'block';
-                startChallenge.style.display = 'block';
-                tutorialBtn.style.display = 'block';
-                pushMovement.disabled = false;
-                bigScore.innerHTML = score;
-                playerScore.classList.remove('hidden');
-                gameTitle.classList.add('hidden');
-    
-                gsap.to('#whiteGameMenu', {
-                    opacity: 1,
-                    scale: 1,
-                    duration: 0.45,
-                    ease: 'expo.out'
-                });
-            }, 1000);
+                gameOver();
+            }, 1000)
 
             for (let j = 0; j < player.radius * 2; j++) {
                 particles.push(new Particle(
@@ -840,10 +850,7 @@ function challenge() {
 
     if (!pushMovement.checked) {
         player.draw();
-        if (press.right) player.x += 4;
-        if (press.left) player.x -= 4;
-        if (press.up) player.y -= 4;
-        if (press.down) player.y += 4;
+        movePlayer();
     } else {
         player.update();
     };
@@ -975,21 +982,7 @@ function challenge() {
         if (playerProjectileDist - projectile.radius - player.radius < 10) {
             setTimeout(() => {
                 cancelAnimationFrame(animationId);
-                gameMenu.style.display = 'flex';
-                startGame.style.display = 'block';
-                startChallenge.style.display = 'block';
-                tutorialBtn.style.display = 'block';
-                pushMovement.disabled = false;
-                bigScore.innerHTML = score;
-                playerScore.classList.remove('hidden');
-                gameTitle.classList.add('hidden');
-    
-                gsap.to('#whiteGameMenu', {
-                    opacity: 1,
-                    scale: 1,
-                    duration: 0.45,
-                    ease: 'expo.out'
-                });
+                gameOver();
             }, 1000);
 
             for (let i = 0; i < player.radius * 2; i++) {
@@ -1020,16 +1013,25 @@ function challenge() {
         const enemyPlayerDist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
 
         // End game
-        if (enemyPlayerDist - player.radius - enemy.radius < 1) {
-            cancelAnimationFrame(animationId);
-            modalEl.style.display = 'flex';
-            bigScore.innerHTML = score;
-            gsap.to('#whiteModalEl', {
-                opacity: 1,
-                scale: 1,
-                duration: 0.45,
-                ease: 'expo.out'
-            });
+        if (enemyPlayerDist - player.radius - enemy.radius < 0.01) {
+            setTimeout(() => {
+                cancelAnimationFrame(animationId);
+                gameOver();
+            }, 500);
+
+            for (let i = 0; i < player.radius * 2; i++) {
+                particles.push(new Particle(
+                    player.x,
+                    player.y,
+                    Math.random() * 2,
+                    player.color,
+                    {
+                        x: (Math.random()-0.5) * (Math.random() * 8),
+                        y: (Math.random()-0.5) * (Math.random() * 8)
+                    }
+                ));
+            };
+            player.alpha = 0;
         };
 
         // Remove enemies from our projectile
@@ -1170,38 +1172,38 @@ startChallenge.addEventListener('click', () => {
     });
 });
 
-addEventListener('keydown', ({ keyCode }) => {
+addEventListener('keydown', ({ key }) => {
     if (pushMovement.checked) {
-        if (keyCode === 87) {
+        if (key === 'w') {
             player.velocity.y -= 1;
-        } else if (keyCode === 65) {
+        } else if (key === 'a') {
             player.velocity.x -= 1;
-        } else if (keyCode === 83) {
+        } else if (key === 's') {
             player.velocity.y += 1;
-        } else if (keyCode === 68) {
+        } else if (key === 'd') {
             player.velocity.x += 1;
         };
     } else {
-        if (keyCode === 68) {
+        if (key === 'd') {
             press.right = true;
-        } else if (keyCode === 65) {
+        } else if (key === 'a') {
             press.left = true;
-        } else if (keyCode === 87) {
+        } else if (key === 'w') {
             press.up = true;
-        } else if (keyCode === 83) {
+        } else if (key === 's') {
             press.down = true;
         };
     };
 });
 
-addEventListener('keyup', ({keyCode}) => {
-    if (keyCode === 68) {
+addEventListener('keyup', ({key}) => {
+    if (key === 'd') {
         press.right = false;
-    } else if (keyCode === 65) {
+    } else if (key === 'a') {
         press.left = false;
-    } else if (keyCode === 87) {
+    } else if (key === 'w') {
         press.up = false;
-    } else if (keyCode === 83) {
+    } else if (key === 's') {
         press.down = false;
     };
 });
