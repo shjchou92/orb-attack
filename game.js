@@ -283,7 +283,7 @@ class Enemy {
                 this.type = 'spinning';
                 
                 if (Math.random() < 0.5) {
-                    this.type = 'jet';
+                    (!mobileGame) ? this.type = 'jet' : this.type = 'linear';
 
                     if (Math.random() < 0.35) {
                         this.type = 'homingSpinning';
@@ -358,7 +358,7 @@ class ShootingEnemy {
     shoot(frame) {
         if (frame % this.counter === 0) {
             const angle = Math.atan2(player.y - this.y, player.x - this.x);
-            enemyProjectiles.push(new Projectile(this.x, this.y, 5, this.color, { x: Math.cos(angle) * 5, y: Math.sin(angle) * 5 }));
+            enemyProjectiles.push(new Projectile(this.x, this.y, 5, this.color, { x: Math.cos(angle) * 3.5, y: Math.sin(angle) * 3.5 }));
         };
     };
 };
@@ -463,7 +463,7 @@ function init(challenge=false) {
     const y = canvas.height / 2;
     player = new Player(x, y, 10, 'white');
     if (challenge) {
-        shield = new Shield();
+        if (!mobileGame) shield = new Shield();
         shootingEnemies = [];
         enemyProjectiles = [];
         alphaNum = 0.2;
@@ -578,7 +578,7 @@ function gameOver() {
     gameMenu.style.display = 'flex';
     startGame.style.display = 'block';
     startChallenge.style.display = 'block';
-    tutorialBtn.style.display = 'block';
+    if (!mobileGame) tutorialBtn.style.display = 'block';
     pushMovement.disabled = false;
     bigScore.innerHTML = score;
     playerScore.classList.remove('hidden');
@@ -603,24 +603,30 @@ function animate() {
     animationId = requestAnimationFrame(animate);
     frame++;
 
-    if (frame % 30 === 0) spawnEnemies(player);
-    if (frame % 2000 === 0) {
+    if (mobileGame) {
+        if (frame % 75 === 0) spawnEnemies(player);
+    } else {
+        if (frame % 30 === 0) spawnEnemies(player);
+    }
+
+    if (mobileGame && frame % 2000 === 0) {
         powerType = 'bomb';
-        spawnPowerUps(powerType);
+    } else if (frame % 4000 === 0) {
+        powerType = 'bomb';
     } else if (frame % 1000 === 0) {
         powerType = (Math.random() < 0.4) ? 'triple' : "";
-        spawnPowerUps(powerType);
-    };
+    }
+    spawnPowerUps(powerType);
     
     c.fillStyle = 'rgba(0, 0, 0, 0.1)';
     c.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (!pushMovement.checked) {
+    if (mobileGame || pushMovement.checked) {
+        player.update();
+    } else {
         player.draw();
         movePlayer();
-    } else {
-        player.update();
-    };
+    }
 
     backgroundParticles.forEach((backgroundParticle) => {
         const bgPlayerDist = Math.hypot(player.x - backgroundParticle.x, player.y - backgroundParticle.y);
@@ -639,15 +645,15 @@ function animate() {
     particles.forEach((particle, index) => {
         (particle.alpha <= 0) ? particles.splice(index, 1) : particle.update();
     });
-
+    
     // Conditional for if the player obtained the power up
     if (player.powerUp === 'automatic' && mouse.down) {
         if (frame % 4 === 0) player.shoot(mouse, '#fff500');
-    };
-
-    if (player.powerUp === 'triple' && mouse.down) {
+    } else if (player.powerUp === 'triple' && mouse.down) {
         if (frame % 12 === 0) player.tripleShoot(mouse);
-    };
+    } else if (mobileGame && mouse.down) {
+        if (frame % 18 === 0) player.shoot(mouse);
+    }
 
     if (player.powerUp === 'explosion' || explode) {
         if (explode && explode.radius < canvas.width) {
@@ -848,31 +854,33 @@ function challenge() {
     c.fillStyle = 'rgba(0, 0, 0, 0.5)';
     c.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (!pushMovement.checked) {
+    if (mobileGame || pushMovement.checked) {
+        player.update();
+    } else {
         player.draw();
         movePlayer();
-    } else {
-        player.update();
-    };
+    }
 
-    shield.update();
+    if (!mobileGame) shield.update();
 
     if (frame % 150 === 0) spawnShootingEnemies();
-    if (frame % 4000 === 0) {
+
+    if (mobileGame && frame % 2000 === 0) {
         powerType = 'star';
-        spawnPowerUps(powerType);
+    } else if (frame % 4000 === 0) {
+        powerType = 'star'; 
     } else if (frame % 1000 === 0) {
         powerType = (Math.random() < 0.4) ? 'triple' : "";
-        spawnPowerUps(powerType);
     };
-
+    spawnPowerUps(powerType);
+    
     if (player.powerUp === 'automatic' && mouse.down) {
         if (frame % 4 === 0) player.shoot(mouse, '#fff500');
-    };
-
-    if (player.powerUp === 'triple' && mouse.down) {
+    } else if (player.powerUp === 'triple' && mouse.down) {
         if (frame % 12 === 0) player.tripleShoot(mouse);
-    };
+    } else if (mobileGame && mouse.down) {
+        if (frame % 18 === 0) player.shoot(mouse);
+    }
 
     powerUps.forEach((powerUp, index) => {
         const powerPlayerDist = Math.hypot(player.x - powerUp.x, player.y - powerUp.y);
@@ -945,35 +953,37 @@ function challenge() {
         projectile.update();
 
         // Check for collision with shield
-        const shieldAngle = Math.atan2(player.y - mouse.y, player.x - mouse.x);
-        const projectileAngle = Math.atan2(player.y - projectile.y, player.x - projectile.x);
         const playerProjectileDist = Math.hypot(player.x - projectile.x, player.y - projectile.y);
-        const shieldProjectileDist = playerProjectileDist - projectile.radius - shield.radius;
-        let shieldOffset = 0;
-
-        if (player.powerUp === 'star') {
-            if (shieldProjectileDist < 0.25) {
-                projectile.velocity.x = -projectile.velocity.x;
-                projectile.velocity.y = -projectile.velocity.y;
-            };
-        } else {
-            // Need this condition to fix a bug in detecting collision between enemy projectile and edge of shield
-            if (Math.abs(projectileAngle) >= (Math.PI - Math.PI*0.25)) {
-                shieldOffset = (projectileAngle < 0) ? Math.PI - (shieldAngle + Math.PI*0.25) : Math.PI + (shieldAngle - Math.PI*0.25);
-            };
+        if (!mobileGame) {
+            const shieldAngle = Math.atan2(player.y - mouse.y, player.x - mouse.x);
+            const projectileAngle = Math.atan2(player.y - projectile.y, player.x - projectile.x);
+            const shieldProjectileDist = playerProjectileDist - projectile.radius - shield.radius;
+            let shieldOffset = 0;
     
-            if ((projectileAngle) >= (shieldAngle-(Math.PI*0.25)) && (projectileAngle) <= (shieldAngle+(Math.PI*0.25)) && shieldProjectileDist < 0.25) {
-                projectile.velocity.x = -projectile.velocity.x;
-                projectile.velocity.y = -projectile.velocity.y;
-            };
-            
-            if (shieldOffset) {
-                if (projectileAngle < 0 && projectileAngle <= -Math.PI - shieldOffset + 0.2 && shieldProjectileDist < 0.25) {
+            if (player.powerUp === 'star') {
+                if (shieldProjectileDist < 0.25) {
                     projectile.velocity.x = -projectile.velocity.x;
                     projectile.velocity.y = -projectile.velocity.y;
-                } else if (projectileAngle > 0 && projectileAngle <= Math.PI - shieldOffset - 0.2 && shieldProjectileDist < 0.25) {
+                };
+            } else {
+                // Need this condition to fix a bug in detecting collision between enemy projectile and edge of shield
+                if (Math.abs(projectileAngle) >= (Math.PI - Math.PI*0.25)) {
+                    shieldOffset = (projectileAngle < 0) ? Math.PI - (shieldAngle + Math.PI*0.25) : Math.PI + (shieldAngle - Math.PI*0.25);
+                };
+        
+                if ((projectileAngle) >= (shieldAngle-(Math.PI*0.25)) && (projectileAngle) <= (shieldAngle+(Math.PI*0.25)) && shieldProjectileDist < 0.25) {
                     projectile.velocity.x = -projectile.velocity.x;
                     projectile.velocity.y = -projectile.velocity.y;
+                };
+                
+                if (shieldOffset) {
+                    if (projectileAngle < 0 && projectileAngle <= -Math.PI - shieldOffset + 0.2 && shieldProjectileDist < 0.25) {
+                        projectile.velocity.x = -projectile.velocity.x;
+                        projectile.velocity.y = -projectile.velocity.y;
+                    } else if (projectileAngle > 0 && projectileAngle <= Math.PI - shieldOffset - 0.2 && shieldProjectileDist < 0.25) {
+                        projectile.velocity.x = -projectile.velocity.x;
+                        projectile.velocity.y = -projectile.velocity.y;
+                    };
                 };
             };
         };
@@ -1206,4 +1216,37 @@ addEventListener('keyup', ({key}) => {
     } else if (key === 's') {
         press.down = false;
     };
+});
+
+// Mobile support
+
+let mobileGame = false
+
+addEventListener('touchstart', (event) => {
+    mobileGame = true;
+
+    window.oncontextmenu = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+
+    mouse.x = event.touches[0].clientX;
+    mouse.y = event.touches[0].clientY;
+
+    mouse.down = true
+});
+
+addEventListener('touchmove', (event) => {
+    mouse.x = event.touches[0].clientX;
+    mouse.y = event.touches[0].clientY;
+    const angle = Math.atan2(player.y - mouse.y, player.x - mouse.x)
+    const xWay = Math.cos(angle);
+    const yWay = Math.sin(angle);
+    (xWay > 0) ? player.velocity.x -= 0.1 : player.velocity.x += 0.1;
+    (yWay > 0) ? player.velocity.y -= 0.1 : player.velocity.y += 0.1;
+});
+
+addEventListener('touchend', () => {
+    mouse.down = false
 });

@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Orb Attack</title>
         <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no, shrink-to-fit=no">
         <link rel="stylesheet", type="text/css" href="styles.css">
 
         <!-- Bootstrap CSS -->
@@ -21,7 +21,7 @@
             <span>Score: </span><span id="scoreEl">0</span>
         </div>
         <div class="position-fixed user-select-none me-2 mb-1" id="version">
-            <p class="fs-6 text-white">v1.0.1</p>
+            <p class="fs-6 text-white">v1.1.1</p>
         </div>
         <div class="position-fixed top-0 start-0 bottom-0 end-0 d-flex align-items-center justify-content-center" id=gameMenu>
             <div class="bg-white p-4 text-center" id="whiteGameMenu">
@@ -30,13 +30,16 @@
                     <h1 class="fw-bold" id="bigScore">0</h1>
                     <p class="fs-4">Points</p>
                 </div>
-                <div class="form-check form-switch d-flex justify-content-center mt-3">
+                <div class="form-check form-switch d-flex justify-content-center mt-3" id="pushMovementEl">
                     <input class="form-check-input me-1" type="checkbox" id="pushMovement">
                     <label class="form-check-label ms-1" for="pushMovement" id="pushMovementLabel">Push Movement</label>
                 </div>
                 <button class="btn btn-lg btn-outline-primary" id="startGameBtn">Play</button>
                 <button class="btn btn-lg btn-outline-primary" id="startChallengeBtn">Challenge</button>
                 <button class="btn btn-lg btn-outline-primary" id="howToPlay">How to play</button>
+                <div class="text-muted hidden" id="mobileMessage">
+                    Play landscape on mobile devices
+                </div>
                 <hr>
                 <div>
                     <a class="text-secondary text-decoration-none ms-1 pe-none user-select-none" href="https://www.flaticon.com/free-icons/trident" title="trident icons" target="_blank">All icons created by <img src="./img/freepik-shrink.png" height="20px" width="auto" alt="Freepik"> - Flaticon</a>
