@@ -607,16 +607,18 @@ function animate() {
         if (frame % 75 === 0) spawnEnemies(player);
     } else {
         if (frame % 30 === 0) spawnEnemies(player);
-    }
+    };
 
     if (mobileGame && frame % 2000 === 0) {
         powerType = 'bomb';
+        spawnPowerUps(powerType);
     } else if (frame % 4000 === 0) {
         powerType = 'bomb';
+        spawnPowerUps(powerType);
     } else if (frame % 1000 === 0) {
         powerType = (Math.random() < 0.4) ? 'triple' : "";
-    }
-    spawnPowerUps(powerType);
+        spawnPowerUps(powerType);
+    };
     
     c.fillStyle = 'rgba(0, 0, 0, 0.1)';
     c.fillRect(0, 0, canvas.width, canvas.height);
@@ -626,7 +628,7 @@ function animate() {
     } else {
         player.draw();
         movePlayer();
-    }
+    };
 
     backgroundParticles.forEach((backgroundParticle) => {
         const bgPlayerDist = Math.hypot(player.x - backgroundParticle.x, player.y - backgroundParticle.y);
@@ -859,7 +861,7 @@ function challenge() {
     } else {
         player.draw();
         movePlayer();
-    }
+    };
 
     if (!mobileGame) shield.update();
 
@@ -867,12 +869,14 @@ function challenge() {
 
     if (mobileGame && frame % 2000 === 0) {
         powerType = 'star';
+        spawnPowerUps(powerType);
     } else if (frame % 4000 === 0) {
-        powerType = 'star'; 
+        powerType = 'star';
+        spawnPowerUps(powerType);
     } else if (frame % 1000 === 0) {
         powerType = (Math.random() < 0.4) ? 'triple' : "";
+        spawnPowerUps(powerType);
     };
-    spawnPowerUps(powerType);
     
     if (player.powerUp === 'automatic' && mouse.down) {
         if (frame % 4 === 0) player.shoot(mouse, '#fff500');
@@ -880,7 +884,7 @@ function challenge() {
         if (frame % 12 === 0) player.tripleShoot(mouse);
     } else if (mobileGame && mouse.down) {
         if (frame % 18 === 0) player.shoot(mouse);
-    }
+    };
 
     powerUps.forEach((powerUp, index) => {
         const powerPlayerDist = Math.hypot(player.x - powerUp.x, player.y - powerUp.y);
