@@ -908,15 +908,19 @@ function challenge() {
                 // Add invincible power
                 player.powerUp = 'star';
                 player.color = '#ff5151';
-                shield.color = '#ff5151';
-                shield.leftEnd = 0;
-                shield.rightEnd = Math.PI * 2;
+                if (!mobileGame) {
+                    shield.color = '#ff5151';
+                    shield.leftEnd = 0;
+                    shield.rightEnd = Math.PI * 2;
+                }
                 setTimeout(() => {
                     player.powerUp = null;
                     player.color = '#fff';
-                    shield.color = '#fff';
-                    shield.leftEnd = shield.angle - shield.half;
-                    shield.rightEnd = shield.angle + shield.half;
+                    if (!mobileGame) {
+                        shield.color = '#fff';
+                        shield.leftEnd = shield.angle - shield.half;
+                        shield.rightEnd = shield.angle + shield.half;
+                    };
                 }, 10000);
             };
             powerUps.splice(index, 1);
@@ -993,7 +997,7 @@ function challenge() {
         };
 
         // Check for collision with player
-        if (playerProjectileDist - projectile.radius - player.radius < 10) {
+        if (playerProjectileDist - projectile.radius - player.radius < 10 && player.powerUp !== 'star') {
             setTimeout(() => {
                 cancelAnimationFrame(animationId);
                 gameOver();
